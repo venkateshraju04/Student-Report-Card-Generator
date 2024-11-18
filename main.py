@@ -5,6 +5,13 @@ from fpdf import FPDF
 input_data="Book1.xlsx"
 data =pd.read_excel(input_data)
 
+#gets college details
+with open("college_data.txt","r") as file:
+    lines=file.readlines()
+college_name=lines[0].strip()
+college_logo=lines[1].strip()
+college_address=lines[2].strip()
+
 
 #course code to subject mapping
 dict={
@@ -15,12 +22,26 @@ dict={
 }
 #create report card
 class ReportCard(FPDF):
-    def __init__(self):
+    def __init__(self,college_name,college_logo,college_address):
         super().__init__()
+        self.college_name=college_name
+        self.college_logo=college_logo
+        self.college_address=college_address
 
     def header(self):
         self.set_font('Arial', 'B', 12)
-        self.cell(0, 10, 'Report Card', 0, 1, 'C')
+        self.image(self.college_logo, 10, 8, 30)
+
+        self.set_xy(45, 10)  # Position next to the logo
+        self.set_font('Arial', 'B', 16)
+        self.cell(0, 10, self.college_name, ln=True)
+        
+        self.set_xy(45, 18)  # Position directly below the college name
+        self.set_font('Arial', '', 10)
+        self.cell(0, 10, self.college_address, ln=True)
+
+        # Add a line break for separation
+        self.ln(20)
     
     def footer(self):
         self.set_y(-15)
@@ -54,16 +75,18 @@ for _, row in data.iterrows():
     name=row["NAME"]
     scores=row[3:]
 
-    pdf = ReportCard()
+    
+    pdf = ReportCard(
+        college_name=college_name,
+        college_logo=college_logo,
+        college_address=college_address
+    )
+
     pdf.add_page()
-
-    pdf.set_font("Arial", "B", 14)
-    pdf.cell(0, 10, f"Name: {name}", ln=True)
-    pdf.cell(0, 10, f"USN: {usn}", ln=True)
-
     #marks table
     pdf.add_score_table(scores, dict)
     #creating pdf output
+    
     output_file = f"{usn}.pdf"
     pdf.output(output_file)
     print(f"Generated report card for {name}: {output_file}")
