@@ -1,6 +1,4 @@
 # Student Progress Report Generator
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=fuCqdW8Zimk)
-
 This Python-based **Student Progress Report Generator** allows educators and administrators to generate progress reports for students based on their scores, attendance, and other performance metrics. The tool processes data input in a structured format (e.g., CSV or Excel files) and outputs comprehensive reports for each student.
 
 ## Requirements
