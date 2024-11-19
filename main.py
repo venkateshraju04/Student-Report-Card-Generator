@@ -138,7 +138,7 @@ for _, row in data.iterrows():
     pdf.add_score_table(scores, dict)
     pdf.add_remarks()
     #creating pdf output
-    
-    output_file = f"{usn}.pdf"
+    output_directory = "./generated_pdf/"
+    output_file = f"{output_directory}{usn}.pdf"
     pdf.output(output_file)
     print(f"Generated report card for {name}: {output_file}")
