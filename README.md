@@ -11,7 +11,7 @@ This Python-based **Student Progress Report Generator** allows educators and adm
 ## Steps To Run
 - You can install the required libraries using the following command:
 ```bash 
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 - Add location of excel sheet containing marks in main.py
 ```bash
