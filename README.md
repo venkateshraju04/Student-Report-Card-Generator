@@ -1,7 +1,9 @@
 # Student Progress Report Generator
 This Python-based **Student Progress Report Generator** allows educators and administrators to generate progress reports for students based on their scores, attendance, and other performance metrics. The tool processes data input in a structured format (e.g., CSV or Excel files) and outputs comprehensive reports for each student.
 
-A simple gui is made using tkinter, allowing users to add college details like name, logo, address, department etc 
+A simple gui is made using tkinter, allowing users to add college details like name, logo, address, department etc.
+#Youtube Demo
+[![Watch the video](https://res.cloudinary.com/dy0xvvpe6/image/upload/v1742638467/Screenshot_111_aajdmx.png)](https://www.youtube.com/watch?v=Z9aw86QeITM)
 ## Requirements
 
 - Python 3.6 or above
