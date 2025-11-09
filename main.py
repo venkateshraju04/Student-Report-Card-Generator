@@ -4,6 +4,8 @@ from fpdf import FPDF
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 # Report Card Class
 class ReportCard(FPDF):
@@ -96,6 +98,31 @@ def load_subject_mappings(file_path="subjects.json"):
     except FileNotFoundError:
         messagebox.showerror("Error", "Subject mapping file not found!")
         return {}
+
+# Function to generate a single report (for multi-threading)
+def generate_single_report(row, subject_codes, subject_mappings, college_name, college_logo, college_address, dept_name, output_dir):
+    """
+    Generate a single report for a student.
+    This function is designed to be called in parallel by multiple threads.
+    """
+    try:
+        usn = row["USN"]
+        name = row["NAME"]
+        scores = {subject: int(row[subject]) if pd.notna(row[subject]) else 0 for subject in subject_codes}
+
+        pdf = ReportCard(college_name, college_logo, college_address, dept_name)
+        pdf.add_page()
+        pdf.add_intro_message(name, usn)
+        pdf.add_score_table(scores, subject_mappings)
+        pdf.add_remarks()
+
+        output_file = os.path.join(output_dir, f"{usn}.pdf")
+        pdf.output(output_file)
+        
+        return True, usn, None
+    except Exception as e:
+        return False, row.get("USN", "Unknown"), str(e)
+
 # Report Generation
 def generate_reports():
     college_name = entry_college.get().strip()
@@ -109,31 +136,62 @@ def generate_reports():
         return
 
     try:
-       
         subject_mappings = load_subject_mappings()
         print(subject_mappings)
         data = pd.read_excel(excel_path)
 
-        subject_codes=list(data.columns[3:])
+        subject_codes = list(data.columns[3:])
         OUTPUT_DIR = "generated_reports"
         os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-        for _, row in data.iterrows():
-            usn = row["USN"]
-            name = row["NAME"]
-            scores = {subject: int(row[subject]) if pd.notna(row[subject]) else 0 for subject in subject_codes}
-
-
-            pdf = ReportCard(college_name, college_logo, college_address,dept_name)
-            pdf.add_page()
-            pdf.add_intro_message(name, usn)
-            pdf.add_score_table(scores, subject_mappings)
-            pdf.add_remarks()
-
-            output_file = os.path.join(OUTPUT_DIR, f"{usn}.pdf")
-            pdf.output(output_file)
-
-        messagebox.showinfo("Success", "Report cards generated successfully!")
+        # Determine the number of threads (use CPU count or a reasonable default)
+        max_workers = min(os.cpu_count() or 4, len(data))
+        
+        # Progress tracking
+        total_students = len(data)
+        completed = 0
+        failed = 0
+        errors = []
+        
+        print(f"Starting multi-threaded report generation for {total_students} students using {max_workers} threads...")
+        
+        # Use ThreadPoolExecutor for parallel processing
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            futures = {
+                executor.submit(
+                    generate_single_report,
+                    row,
+                    subject_codes,
+                    subject_mappings,
+                    college_name,
+                    college_logo,
+                    college_address,
+                    dept_name,
+                    OUTPUT_DIR
+                ): idx for idx, (_, row) in enumerate(data.iterrows())
+            }
+            
+            # Process completed tasks
+            for future in as_completed(futures):
+                success, usn, error = future.result()
+                if success:
+                    completed += 1
+                    print(f"Generated report for {usn} ({completed}/{total_students})")
+                else:
+                    failed += 1
+                    errors.append(f"USN {usn}: {error}")
+                    print(f"Failed to generate report for {usn}: {error}")
+        
+        # Show completion message
+        if failed == 0:
+            messagebox.showinfo("Success", f"All {completed} report cards generated successfully!")
+        else:
+            error_message = f"Generated {completed} reports successfully.\n{failed} reports failed:\n" + "\n".join(errors[:5])
+            if len(errors) > 5:
+                error_message += f"\n... and {len(errors) - 5} more errors."
+            messagebox.showwarning("Partial Success", error_message)
+            
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
