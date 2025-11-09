@@ -26,4 +26,5 @@ python main.py
 ## Implemenations yet to do
 - ~~Improve overall design of report card~~
 - ~~Develop simple GUI to make the process easy~~
+- ~~Apply multithreading concepts~~
 - Add student attendance details
